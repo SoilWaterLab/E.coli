@@ -16,7 +16,7 @@ CR_data <- read.csv(paste(dir,CR_file,sep=""))
 
 # Open the file that contains the colony source and location information
 
-decode_file <- "Randomized_CR_plan.csv"
+decode_file <- "Randomized_CR_plan_revised.csv"
 decode_info <- read.csv(paste(dir,decode_file,sep=""))
 
 # Start decoding 
