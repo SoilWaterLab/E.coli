@@ -1,3 +1,10 @@
+# CR_picture_code_KKC.R
+# Created by Allison Truhlar
+# Last edited 09/16/2015 by Allison Truhlar
+# This script loads all the data from the imageJ-processed Congo Red pictures, decodes the identity of the 
+# colonies by week collected and treatment, normalizes the colony color by the WT phl628 E. coli color, and
+# plots the growth of the colonies over time
+
 library(ggplot2)
 library(plyr)
 
@@ -6,13 +13,43 @@ rm(list=ls())
 
 # Set working directory
 #Allison, PC:"C:\\Users\\Owner\\Dropbox\\Cornell\\Ecoli_research\\Data\\"
-dir <-"C:\\Users\\Ross\\Desktop\\R_code\\"
+#Keiran: "C:\\Users\\Ross\\Desktop\\R_code\\"
+dir <-"C:\\Users\\Owner\\Dropbox\\Cornell\\Ecoli_research\\Data\\Congo Red\\Randomized for realz\\"
 setwd(dir)
 
-# Open the file with all the imageJ data
+# Enter how many hours of data exist (can hard code this if desired)
+# readline(prompt="Enter how many hours of photos exist (multiple of 24): ")
 
-CR_file <- "Randomized-test-data.csv"
-CR_data <- read.csv(paste(dir,CR_file,sep=""))
+time <- 48
+
+# Create loop to open all data files and append them into one dataframe.  Index starts at 24 (for 24h), and 
+# ends when the index passes the "time" in hours just input by the user.  Note that this loop requires that 
+# all four plate images (and it assumes four plates) have been processed.  To change the number of plates, 
+# change the maximum value of j in the for loop.
+
+i <- 24
+
+while (i<=time){
+  
+  for (j in 1:4){
+    
+    file <- paste(dir,i,"h\\Plate",j,"\\Plate",j,"_",i,"h_results.csv",sep="")
+    CR_data <- read.csv(file)
+    CR_data$Plate <- rep(j,nrow(CR_data))
+    CR_data$Time <- rep(i,nrow(CR_data))
+    CR_data <- CR_data[c(9,8,1,2,3,4,5,6,7)]
+    
+    if(exists("CR_data_old")==TRUE){
+      CR_data <- rbind(CR_data_old,CR_data)
+    }
+    
+    CR_data_old <- CR_data
+    
+  }
+  
+  i = i + 24
+  
+}
 
 # Open the file that contains the colony source and location information
 
