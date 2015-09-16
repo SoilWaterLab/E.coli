@@ -111,6 +111,38 @@ for (j in 1:nrow(CR_data)){
   CR_data$Isolate_type[j] <- paste(CR_data$Treatment[j],"_Week",CR_data$Week[j],sep="")
 }
 
+# Goal 1: Normalize the grey scale values (corresponding roughly to how red the colonies are) between the values
+# for the negative and positive controls
+#####
+
+# Start by summarizing by Time, Plate and Treatment to find the mean and SE of 1. the mean grey value and 2. the mode grey value for
+# the negative and positive controls on any given plate at any given time
+
+grey_mean_SE <- ddply(CR_data, c("Time","Plate","Treatment"), summarise, 
+                      mean=mean(Mean), se=sd(Mean)/sqrt(length(Mean)))
+
+# Using the same matching scheme as before, normalize the mean grey value of the colonies by the mean of the
+# mean grey value of the positive and negative controls for a given plate and time.  Specifically, subtract the
+# positive control mean and divide by the negative control mean.
+
+CR_data[,"Normalized_Mean"] <- NA
+
+for (j in 1:nrow(CR_data)){
+  
+  if (CR_data$Treatment[j] != "Positive control" & CR_data$Treatment[j] != "Negative control"){
+  
+  target_plate <- CR_data$Plate[j]
+  target_time <- CR_data$Time[j]
+  pos_mean <- grey_mean_SE$mean[grey_mean_SE$Plate == target_plate & grey_mean_SE$Time == target_time & grey_mean_SE$Treatment == "Positive control"]
+  neg_mean <- grey_mean_SE$mean[grey_mean_SE$Plate == target_plate & grey_mean_SE$Time == target_time & grey_mean_SE$Treatment == "Negative control"]
+  CR_data$Normalized_Mean[j] <- (CR_data$Mean[j] - pos_mean)/(neg_mean-pos_mean)
+  
+  } else {
+    CR_data$Normalized_Mean[j] <- NA
+  }
+}
+
+
 # Now summarize by Isolate_type and Time to find the mean and SE of Area
 
 area_mean_SE <- ddply(CR_data, c("Isolate_type","Time"), summarise, mean=mean(Area), se=sd(Area)/sqrt(length(Area)))
