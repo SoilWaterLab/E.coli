@@ -44,11 +44,9 @@ while (i<=time){
     }
     
     CR_data_old <- CR_data
-    
   }
   
   i = i + 24
-  
 }
 
 # Open the file that contains the colony source and location information
@@ -59,17 +57,7 @@ decode_info <- read.csv(paste(dir,decode_file,sep=""))
 # Start decoding 
 
 for (i in 1:nrow(decode_info)){
-  
-  # First assign plate numbers between 1 and 2 and location numbers between 1 and 36
-  # These numbers are only relevant to the test run, and will change for the actual trial
-  if (decode_info$Raw_Location[i] > 36){
-    decode_info$Plate[i] <- 2
-    decode_info$Location[i] <- decode_info$Raw_Location[i]-36
-  } else if(decode_info$Raw_Location[i]<=36){
-    decode_info$Plate[i] <- 1
-    decode_info$Location[i] <- decode_info$Raw_Location[i]
-  }
-  
+
   # Then assign treatment type based on the source well
   if(is.na(pmatch("A",decode_info$Well[i]))==FALSE | is.na(pmatch("B",decode_info$Well[i]))==FALSE){
     decode_info$Treatment[i] <- "Inoc Soil, SA"
@@ -79,58 +67,51 @@ for (i in 1:nrow(decode_info)){
     decode_info$Treatment[i] <- "Inoc Manure, SA"
   } else if(is.na(pmatch("G",decode_info$Well[i]))==FALSE | is.na(pmatch("H",decode_info$Well[i]))==FALSE){
     decode_info$Treatment[i] <- "Inoc Manure, Incorp"
+  } else if(is.na(pmatch("Positive",decode_info$Well[i]))==FALSE){
+    decode_info$Treatment[i]<-"Positive control"
+  }else if(is.na(pmatch("Negative",decode_info$Well[i]))==FALSE){
+    decode_info$Treatment[i]<-"Negative control"
   }
 }
 
 # Continue decoding by taking the Treatment information just generated and matching it to the imageJ file, 
 # based on matching Plate and Location.  Also take the Week information.
-
-# The Plan: increment one row at a time through the CR_data dataframe.  Within this, increment one row at a time
-# through the decode_info dataframe.  Query whether the Plate and Location information in the current row of the 
-# decode_info dataframe match the Plate and Location information in the current row of the CR_data frame.  If so,
-# set the Treatment column of the CR_data dataframe to equal the value in the decode_info dataframe.  If not,
-# allow the loop to increment to the next row of the decode_info dataframe and continue the search.
-
-# First add empty columns called "week" and "treatment" to the CR_data dataframe
-
-col_names <- c("Week","Treatment","Isolate_type")
-CR_data[,col_names] <- NA
-
-# for (j in 1:nrow(CR_data)){
-#   for (k in 1:nrow(decode_info)){
-#     if (CR_data$Plate[j] == decode_info$Plate[k] & CR_data$Location[j] == decode_info$Location[k]){
-#       CR_data$Treatment[j] <- decode_info$Treatment[k]
-#       CR_data$Week[j] <- decode_info$Week[k]
-#     } else {
-#       break
-#     }
-#   }
-# }
-
-# The New Plan: increment one row at a time through the CR_data dataframe.  Extract the Plate and Location 
+  
+# The Plan: increment one row at a time through the CR_data dataframe.  Extract the Plate and Location 
 # information.  Use grep to search the decode_info Plate and Location columns for matches.  Return the row
 # number.  Then set the Week and Treatment values in CR_data using the row number from decode_info to extract
 # the appropriate values of these variables.
 
-# Note I'm starting the incrementing at 37 to skip over the control plates
+# First add empty columns called "week" and "treatment" to the CR_data dataframe.  Also add a column called 
+# "Isolate_type" for use with plotting later.
 
-for (j in 37:nrow(CR_data)){
+col_names <- c("Week","Treatment","Isolate_type")
+CR_data[,col_names] <- NA
+
+for (j in 1:nrow(CR_data)){
+  
   target_plate <- CR_data$Plate[j]
   target_location <- CR_data$Location[j]
   plate_row_match <- which(decode_info$Plate == target_plate)
   location_row_match <- which(decode_info$Location == target_location)
   match <- intersect(plate_row_match,location_row_match)
-  CR_data$Week[j] <- decode_info$Week[match]
   CR_data$Treatment[j] <- decode_info$Treatment[match]
+  
+  if (CR_data$Treatment[j] != "Positive control" & CR_data$Treatment[j] != "Negative control"){
+    CR_data$Week[j] <- decode_info$Week[match]
+    
+  } else {
+    CR_data$Week[j] <- NA
+  }
 }
 
-# I am also creating a new variable that combines Week and Treatment to form a new variable to plot by, Isolate_type.
-for (j in 37:nrow(CR_data)){
+# Now create a new variable that combines Week and Treatment to form a new variable to plot by, Isolate_type.
+
+for (j in 1:nrow(CR_data)){
   CR_data$Isolate_type[j] <- paste(CR_data$Treatment[j],"_Week",CR_data$Week[j],sep="")
 }
-levels(CR_data$Isolate_type)<-
 
-# Success!  Now summarize by Isolate_type and Time to find the mean and SE of Area
+# Now summarize by Isolate_type and Time to find the mean and SE of Area
 
 area_mean_SE <- ddply(CR_data, c("Isolate_type","Time"), summarise, mean=mean(Area), se=sd(Area)/sqrt(length(Area)))
 area_mean_SE <- transform(area_mean_SE, lower=mean-se, upper=mean+se)
