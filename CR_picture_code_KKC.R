@@ -146,12 +146,32 @@ for (j in 1:nrow(CR_data)){
 # First remove the control data
 CR_plot_data <- CR_data[CR_data$Treatment != "Positive control" & CR_data$Treatment != "Negative control",]
 
+# 24 hour plot
+norm_scale_24 <- ggplot(CR_plot_data[CR_plot_data$Time==24,], aes(x=Week, y=Normalized_Mean, fill=interaction(Week,Treatment)))+
+  geom_boxplot()+
+  ylab("Normalized grey scale")+
+  xlab("Week collected")+
+  scale_fill_manual(values=c("#1f78b4","#1f78b4","#a6cee3","#a6cee3","#33a02c","#33a02c","#b2df8a","#b2df8a"))+
+  geom_hline(yintercept=0, linetype=2, size=0.75, color="red")+
+  geom_hline(yintercept=1, linetype=2, size=0.75, color="gray")+
+  coord_cartesian(ylim=c(-2.25,2.25))+
+  theme_bw()+
+  theme(axis.text=element_text(size=18), axis.title.x=element_text(size=18,face="bold",vjust=-0.4), 
+        axis.title.y=element_text(size=18,vjust=1.2), legend.text=element_text(size=18),
+        legend.title=element_text(size=18,face="bold"), legend.position="right")
+norm_scale_24
+norm_scale_24_file <- paste(dir,"norm_scale_24.png",sep="")
+ggsave(file=norm_scale_24_file, plot=norm_scale_24)
+
 # 48 hour plot
 norm_scale_48 <- ggplot(CR_plot_data[CR_plot_data$Time==48,], aes(x=Week, y=Normalized_Mean, fill=interaction(Week,Treatment)))+
   geom_boxplot()+
   ylab("Normalized grey scale")+
   xlab("Week collected")+
   scale_fill_manual(values=c("#1f78b4","#1f78b4","#a6cee3","#a6cee3","#33a02c","#33a02c","#b2df8a","#b2df8a"))+
+  geom_hline(yintercept=0, linetype=2, size=0.75, color="red")+
+  geom_hline(yintercept=1, linetype=2, size=0.75, color="gray")+
+  coord_cartesian(ylim=c(-2.25,2.25))+
   theme_bw()+
   theme(axis.text=element_text(size=18), axis.title.x=element_text(size=18,face="bold",vjust=-0.4), 
         axis.title.y=element_text(size=18,vjust=1.2), legend.text=element_text(size=18),
