@@ -17,6 +17,8 @@ rm(list=ls())
 dir <-"C:\\Users\\Owner\\Dropbox\\Cornell\\Ecoli_research\\Data\\Congo Red\\Randomized for realz\\"
 setwd(dir)
 
+# Find and load all the existing data -------------------
+
 # Enter how many hours of data exist (can hard code this if desired)
 # readline(prompt="Enter how many hours of photos exist (multiple of 24): ")
 
@@ -48,6 +50,8 @@ while (i<=time){
   
   i = i + 24
 }
+
+# Decoding the CR_data file ---------------------------
 
 # Open the file that contains the colony source and location information
 
@@ -110,9 +114,9 @@ for (j in 1:nrow(CR_data)){
   CR_data$Isolate_type[j] <- paste(CR_data$Treatment[j],"_Week",CR_data$Week[j],sep="")
 }
 
-# Goal 1: Normalize the grey scale values (corresponding roughly to how red the colonies are) between the values
-# for the negative and positive controls
-#####
+# Goal 1: Normalize and plot the grey scale values -------------------------------------
+
+# Grey scale values correspond roughly to how red the colonies are between the values for the negative and positive controls
 
 # Start by summarizing by Time, Plate and Treatment to find the mean and SE of 1. the mean grey value and 2. the mode grey value for
 # the negative and positive controls on any given plate at any given time
@@ -144,9 +148,11 @@ for (j in 1:nrow(CR_data)){
 # Will try a boxplot by "Isolate_type"
 
 # First remove the control data
+
 CR_plot_data <- CR_data[CR_data$Treatment != "Positive control" & CR_data$Treatment != "Negative control",]
 
 # 24 hour plot
+
 norm_scale_24 <- ggplot(CR_plot_data[CR_plot_data$Time==24,], aes(x=Week, y=Normalized_Mean, fill=interaction(Week,Treatment)))+
   geom_boxplot()+
   ylab("Normalized grey scale")+
@@ -164,6 +170,7 @@ norm_scale_24_file <- paste(dir,"norm_scale_24.png",sep="")
 ggsave(file=norm_scale_24_file, plot=norm_scale_24)
 
 # 48 hour plot
+
 norm_scale_48 <- ggplot(CR_plot_data[CR_plot_data$Time==48,], aes(x=Week, y=Normalized_Mean, fill=interaction(Week,Treatment)))+
   geom_boxplot()+
   ylab("Normalized grey scale")+
@@ -180,9 +187,7 @@ norm_scale_48
 norm_scale_48_file <- paste(dir,"norm_scale_48.png",sep="")
 ggsave(file=norm_scale_48_file, plot=norm_scale_48)
 
-
-
-
+# Goal 2: Plot the area of isolates time ---------------------------------
 
 # Now summarize by Isolate_type and Time to find the mean and SE of Area
 
@@ -192,13 +197,11 @@ limits <- aes(ymax=area_mean_SE$upper, ymin=area_mean_SE$lower)
 
 pd <- position_dodge(0.1)
 
-area_mean_SE <- na.omit(area_mean_SE)
-
 CR_growth_plot <- ggplot(area_mean_SE, aes(x=Time, y=mean, colour=Isolate_type, shape=Isolate_type, group=Isolate_type))+
   geom_errorbar(limits, width = 0, colour="black",position=pd)+
   geom_line(colour="black",position=pd)+
   geom_point(size=4,position=pd)+
-  scale_shape_manual(values=c(15,16,17,18,19,20,21,22))+
+  #scale_shape_manual(values=c(15,16,17,18,19,20,21,22))+
   #scale_color_manual(values=c("#1f78b4","#a6cee3","#33a02c","#b2df8a","#1f78b4","#a6cee3","#33a02c","#b2df8a"))+
   ylab("Area (cm^2)")+
   xlab("Time (hr)")+
@@ -236,9 +239,3 @@ CR_growth_plot_2 <- ggplot(area_mean_SE, aes(x=Time, y=mean, colour=Week, shape=
 CR_growth_plot_2
 plot_filename <- paste(dir,"CR_growth_plot_2","_all.png", sep="")
 ggsave(file=plot_filename, plot=CR_growth_plot_2)
-
-# biofilm_boxplot_file <- paste(dir,biofilm_file,"_combined.png",sep="")
-# ggsave(file=biofilm_boxplot_file, plot=biofilm_boxplot)
-# 
-# model <- lm(biofilm_data$Absorbance ~ biofilm_data$Type)
-# summary(model)
