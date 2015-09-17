@@ -92,13 +92,10 @@ for (j in 1:nrow(CR_data)){
   
   target_plate <- CR_data$Plate[j]
   target_location <- CR_data$Location[j]
-  plate_row_match <- which(decode_info$Plate == target_plate)
-  location_row_match <- which(decode_info$Location == target_location)
-  match <- intersect(plate_row_match,location_row_match)
-  CR_data$Treatment[j] <- decode_info$Treatment[match]
+  CR_data$Treatment[j] <- decode_info$Treatment[decode_info$Plate==target_plate & decode_info$Location==target_location]
   
   if (CR_data$Treatment[j] != "Positive control" & CR_data$Treatment[j] != "Negative control"){
-    CR_data$Week[j] <- decode_info$Week[match]
+    CR_data$Week[j] <- decode_info$Week[decode_info$Plate==target_plate & decode_info$Location==target_location]
     
   } else {
     CR_data$Week[j] <- NA
