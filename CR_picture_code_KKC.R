@@ -223,12 +223,12 @@ limits <- aes(ymax=area_mean_SE$upper, ymin=area_mean_SE$lower)
 
 pd <- position_dodge(0.1)
 
-CR_growth_plot <- ggplot(area_mean_SE, aes(x=Time, y=mean, colour=Isolate_type, shape=Isolate_type, group=Isolate_type))+
+CR_growth_plot <- ggplot(area_mean_SE, aes(x=Time, y=mean, colour=Isolate_Type, shape=Isolate_Type, group=Isolate_Type))+
   geom_errorbar(limits, width = 0, colour="black",position=pd)+
   geom_line(colour="black",position=pd)+
   geom_point(size=4,position=pd)+
-  #scale_shape_manual(values=c(15,16,17,18,19,20,21,22))+
-  #scale_color_manual(values=c("#1f78b4","#a6cee3","#33a02c","#b2df8a","#1f78b4","#a6cee3","#33a02c","#b2df8a"))+
+  scale_shape_manual(values=c(15,15,17,17,8,19,8))+
+  scale_color_manual(values=c("#1f78b4","#a6cee3","#33a02c","#b2df8a","grey","#fdae61","red"))+
   ylab("Area (cm^2)")+
   xlab("Time (hr)")+
   theme_bw()+
@@ -236,7 +236,7 @@ CR_growth_plot <- ggplot(area_mean_SE, aes(x=Time, y=mean, colour=Isolate_type, 
         axis.title.y=element_text(size=18,vjust=1.2), legend.text=element_text(size=10),
         legend.title=element_text(size=10,face="bold"), legend.position="right")
 CR_growth_plot
-plot_filename <- paste(dir,"CR_growth_plot","_all.png", sep="")
+plot_filename <- paste(dir,"CR_growth_plot_all.png", sep="")
 ggsave(file=plot_filename, plot=CR_growth_plot)
 
 
