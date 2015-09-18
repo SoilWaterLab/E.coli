@@ -22,7 +22,7 @@ setwd(dir)
 # Enter how many hours of data exist (can hard code this if desired)
 # readline(prompt="Enter how many hours of photos exist (multiple of 24): ")
 
-time <- 72
+time <- 96
 
 # Create loop to open all data files and append them into one dataframe.  Index starts at 24 (for 24h), and 
 # ends when the index passes the "time" in hours just input by the user.  Note that this loop requires that 
@@ -202,6 +202,24 @@ CR_plot_data <- CR_data[CR_data$Treatment != "Positive control" & CR_data$Treatm
 # norm_scale_72
 # norm_scale_72_file <- paste(dir,"norm_scale_72.png",sep="")
 # ggsave(file=norm_scale_72_file, plot=norm_scale_72)
+
+# 96 hour plot
+
+norm_scale_96 <- ggplot(CR_plot_data[CR_plot_data$Time==96,], aes(x=Week, y=Normalized_Mean, fill=interaction(Week,Treatment)))+
+  geom_boxplot()+
+  ylab("Normalized grey scale")+
+  xlab("Week collected")+
+  scale_fill_manual(values=c("#2c7bb6","#abd9e9","#e66101","#fdae61","#ffffbf"))+
+  geom_hline(yintercept=0, linetype=2, size=0.75, color="red")+
+  geom_hline(yintercept=1, linetype=2, size=0.75, color="gray")+
+  coord_cartesian(ylim=c(-2.25,2.25))+
+  theme_bw()+
+  theme(axis.text=element_text(size=18), axis.title.x=element_text(size=18,face="bold",vjust=-0.4), 
+        axis.title.y=element_text(size=18,vjust=1.2), legend.text=element_text(size=18),
+        legend.title=element_text(size=18,face="bold"), legend.position="right")
+norm_scale_96
+norm_scale_96_file <- paste(dir,"norm_scale_96.png",sep="")
+ggsave(file=norm_scale_96_file, plot=norm_scale_96)
 
 # Goal 2: Plot the area of isolates time ---------------------------------
 
