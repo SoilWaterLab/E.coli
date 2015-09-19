@@ -22,7 +22,7 @@ setwd(dir)
 # Enter how many hours of data exist (can hard code this if desired)
 # readline(prompt="Enter how many hours of photos exist (multiple of 24): ")
 
-time <- 96
+time <- 120
 
 # Create loop to open all data files and append them into one dataframe.  Index starts at 24 (for 24h), and 
 # ends when the index passes the "time" in hours just input by the user.  Note that this loop requires that 
@@ -143,6 +143,12 @@ for (j in 1:nrow(CR_data)){
   }
 }
 
+# Create a new variable that combines Week and Treatment to form a new variable to plot by, Isolate_type.
+
+for (j in 1:nrow(CR_data)){
+  CR_data$Isolate_Type[j] <- paste(CR_data$Treatment[j],"_Week",CR_data$Week[j],sep="")
+}
+
 # Boxplots
 
 # First remove the control data
@@ -186,7 +192,7 @@ CR_plot_data <- CR_data[CR_data$Treatment != "Positive control" & CR_data$Treatm
 # ggsave(file=norm_scale_48_file, plot=norm_scale_48)
 # 
 # # 72 hour plot
-# 
+#  
 # norm_scale_72 <- ggplot(CR_plot_data[CR_plot_data$Time==72,], aes(x=Week, y=Normalized_Mean, fill=interaction(Week,Treatment)))+
 #   geom_boxplot()+
 #   ylab("Normalized grey scale")+
@@ -202,36 +208,72 @@ CR_plot_data <- CR_data[CR_data$Treatment != "Positive control" & CR_data$Treatm
 # norm_scale_72
 # norm_scale_72_file <- paste(dir,"norm_scale_72.png",sep="")
 # ggsave(file=norm_scale_72_file, plot=norm_scale_72)
+# 
+# # 96 hour plot
+# 
+# norm_scale_96 <- ggplot(CR_plot_data[CR_plot_data$Time==96,], aes(x=Week, y=Normalized_Mean, fill=interaction(Week,Treatment)))+
+#   geom_boxplot()+
+#   ylab("Normalized grey scale")+
+#   xlab("Week collected")+
+#   scale_fill_manual(values=c("#2c7bb6","#abd9e9","#e66101","#fdae61","#ffffbf"))+
+#   geom_hline(yintercept=0, linetype=2, size=0.75, color="red")+
+#   geom_hline(yintercept=1, linetype=2, size=0.75, color="gray")+
+#   coord_cartesian(ylim=c(-2.25,2.25))+
+#   theme_bw()+
+#   theme(axis.text=element_text(size=18), axis.title.x=element_text(size=18,face="bold",vjust=-0.4), 
+#         axis.title.y=element_text(size=18,vjust=1.2), legend.text=element_text(size=18),
+#         legend.title=element_text(size=18,face="bold"), legend.position="right")
+# norm_scale_96
+# norm_scale_96_file <- paste(dir,"norm_scale_96.png",sep="")
+# ggsave(file=norm_scale_96_file, plot=norm_scale_96)
+# 
+# 
+# # 120 hour plot
+# 
+# norm_scale_120 <- ggplot(CR_plot_data[CR_plot_data$Time==120,], aes(x=Week, y=Normalized_Mean, fill=interaction(Week,Treatment)))+
+#   geom_boxplot()+
+#   ylab("Normalized grey scale")+
+#   xlab("Week collected")+
+#   scale_fill_manual(values=c("#2c7bb6","#abd9e9","#e66101","#fdae61","#ffffbf"))+
+#   geom_hline(yintercept=0, linetype=2, size=0.75, color="red")+
+#   geom_hline(yintercept=1, linetype=2, size=0.75, color="gray")+
+#   coord_cartesian(ylim=c(-2.25,2.25))+
+#   theme_bw()+
+#   theme(axis.text=element_text(size=18), axis.title.x=element_text(size=18,face="bold",vjust=-0.4), 
+#         axis.title.y=element_text(size=18,vjust=1.2), legend.text=element_text(size=18),
+#         legend.title=element_text(size=18,face="bold"), legend.position="right")
+# norm_scale_120
+# norm_scale_120_file <- paste(dir,"norm_scale_120.png",sep="")
+# ggsave(file=norm_scale_120_file, plot=norm_scale_120)
 
-# 96 hour plot
 
-norm_scale_96 <- ggplot(CR_plot_data[CR_plot_data$Time==96,], aes(x=Week, y=Normalized_Mean, fill=interaction(Week,Treatment)))+
-  geom_boxplot()+
-  ylab("Normalized grey scale")+
-  xlab("Week collected")+
-  scale_fill_manual(values=c("#2c7bb6","#abd9e9","#e66101","#fdae61","#ffffbf"))+
+# Line plot of change in red color over time
+
+grey_summary <- ddply(CR_plot_data, c("Isolate_Type","Time"), summarise, mean=mean(Normalized_Mean), se=sd(Normalized_Mean)/sqrt(length(Normalized_Mean)))
+grey_summary_SE <- transform(grey_summary, lower=mean-se, upper=mean+se)
+limits <- aes(ymax=grey_summary_SE$upper, ymin=grey_summary_SE$lower)
+
+pd <- position_dodge(0.1)
+
+CR_grey_plot <- ggplot(grey_summary_SE , aes(x=Time, y=mean, colour=Isolate_Type, shape=Isolate_Type, group=Isolate_Type))+
+  geom_errorbar(limits, width = 0, colour="black",position=pd)+
+  geom_line(colour="black",position=pd)+
+  geom_point(size=4,position=pd)+
+  scale_shape_manual(values=c(15,15,17,17,19))+
+  scale_color_manual(values=c("#1f78b4","#a6cee3","#33a02c","#b2df8a","#fdae61"))+
+  ylab("Normalized Mean Grey Value")+
+  xlab("Time (hr)")+
   geom_hline(yintercept=0, linetype=2, size=0.75, color="red")+
   geom_hline(yintercept=1, linetype=2, size=0.75, color="gray")+
-  coord_cartesian(ylim=c(-2.25,2.25))+
   theme_bw()+
   theme(axis.text=element_text(size=18), axis.title.x=element_text(size=18,face="bold",vjust=-0.4), 
-        axis.title.y=element_text(size=18,vjust=1.2), legend.text=element_text(size=18),
-        legend.title=element_text(size=18,face="bold"), legend.position="right")
-norm_scale_96
-norm_scale_96_file <- paste(dir,"norm_scale_96.png",sep="")
-ggsave(file=norm_scale_96_file, plot=norm_scale_96)
+        axis.title.y=element_text(size=18,vjust=1.2), legend.text=element_text(size=10),
+        legend.title=element_text(size=10,face="bold"), legend.position="right")
+CR_grey_plot
+plot_filename <- paste(dir,"CR_grey_plot_all.png", sep="")
+ggsave(file=plot_filename, plot=CR_grey_plot)
 
 # Goal 2: Plot the area of isolates time ---------------------------------
-
-# Create a new variable that combines Week and Treatment to form a new variable to plot by, Isolate_type.
-# First add an empty column called "Isolate_Type" to the CR_data dataframe.  
-
-# col_names <- c("Isolate_Type")
-# CR_data[,col_names] <- NA
-
-for (j in 1:nrow(CR_data)){
-  CR_data$Isolate_Type[j] <- paste(CR_data$Treatment[j],"_Week",CR_data$Week[j],sep="")
-}
 
 # Now summarize by Isolate_type and Time to find the mean and SE of Area
 
