@@ -22,7 +22,7 @@ setwd(dir)
 # Enter how many hours of data exist (can hard code this if desired)
 # readline(prompt="Enter how many hours of photos exist (multiple of 24): ")
 
-time <- 120
+time <- 168
 
 # Create loop to open all data files and append them into one dataframe.  Index starts at 24 (for 24h), and 
 # ends when the index passes the "time" in hours just input by the user.  Note that this loop requires that 
@@ -246,6 +246,42 @@ CR_plot_data <- CR_data[CR_data$Treatment != "Positive control" & CR_data$Treatm
 # norm_scale_120_file <- paste(dir,"norm_scale_120.png",sep="")
 # ggsave(file=norm_scale_120_file, plot=norm_scale_120)
 
+# 144 hour plot
+
+norm_scale_144 <- ggplot(CR_plot_data[CR_plot_data$Time==144,], aes(x=Week, y=Normalized_Mean, fill=interaction(Week,Treatment)))+
+  geom_boxplot()+
+  ylab("Normalized grey scale")+
+  xlab("Week collected")+
+  scale_fill_manual(values=c("#2c7bb6","#abd9e9","#e66101","#fdae61","#ffffbf"))+
+  geom_hline(yintercept=0, linetype=2, size=0.75, color="red")+
+  geom_hline(yintercept=1, linetype=2, size=0.75, color="gray")+
+  coord_cartesian(ylim=c(-2.25,2.25))+
+  theme_bw()+
+  theme(axis.text=element_text(size=18), axis.title.x=element_text(size=18,face="bold",vjust=-0.4), 
+        axis.title.y=element_text(size=18,vjust=1.2), legend.text=element_text(size=18),
+        legend.title=element_text(size=18,face="bold"), legend.position="right")
+norm_scale_144
+norm_scale_144_file <- paste(dir,"norm_scale_144.png",sep="")
+ggsave(file=norm_scale_144_file, plot=norm_scale_144)
+
+# 168 hour plot
+
+norm_scale_168 <- ggplot(CR_plot_data[CR_plot_data$Time==168,], aes(x=Week, y=Normalized_Mean, fill=interaction(Week,Treatment)))+
+  geom_boxplot()+
+  ylab("Normalized grey scale")+
+  xlab("Week collected")+
+  scale_fill_manual(values=c("#2c7bb6","#abd9e9","#e66101","#fdae61","#ffffbf"))+
+  geom_hline(yintercept=0, linetype=2, size=0.75, color="red")+
+  geom_hline(yintercept=1, linetype=2, size=0.75, color="gray")+
+  coord_cartesian(ylim=c(-2.25,2.25))+
+  theme_bw()+
+  theme(axis.text=element_text(size=18), axis.title.x=element_text(size=18,face="bold",vjust=-0.4), 
+        axis.title.y=element_text(size=18,vjust=1.2), legend.text=element_text(size=18),
+        legend.title=element_text(size=18,face="bold"), legend.position="right")
+norm_scale_168
+norm_scale_168_file <- paste(dir,"norm_scale_168.png",sep="")
+ggsave(file=norm_scale_168_file, plot=norm_scale_168)
+
 
 # Line plot of change in red color over time
 
@@ -325,3 +361,68 @@ CR_growth_plot_2 <- ggplot(area_mean_SE, aes(x=Time, y=mean, colour=Week, shape=
 CR_growth_plot_2
 plot_filename <- paste(dir,"CR_growth_plot_2","_all.png", sep="")
 ggsave(file=plot_filename, plot=CR_growth_plot_2)
+
+# Without the outer isolates ---------------------------------
+
+outer_old<-{}
+
+for (i in 1:nrow(CR_data)){
+  if(is.element(CR_data$Location[i],c(1,2,3,4,5,6,7,12,13,18,19,24,25,30,31,36))==T){
+    outer <- c(outer_old,i)
+    outer_old <- outer
+  } 
+}
+
+inner_data <- CR_data[-outer,]
+
+# Without outer isolates - Line plot of change in red color over time
+
+inner_CR_plot_data <- inner_data[inner_data$Treatment != "Positive control" & inner_data$Treatment != "Negative control",]
+
+inner_grey_summary <- ddply(inner_CR_plot_data, c("Isolate_Type","Time"), summarise, mean=mean(Normalized_Mean), se=sd(Normalized_Mean)/sqrt(length(Normalized_Mean)))
+inner_grey_summary_SE <- transform(inner_grey_summary, lower=mean-se, upper=mean+se)
+inner_limits <- aes(ymax=inner_grey_summary_SE$upper, ymin=inner_grey_summary_SE$lower)
+
+pd <- position_dodge(0.1)
+
+inner_CR_grey_plot <- ggplot(inner_grey_summary_SE , aes(x=Time, y=mean, colour=Isolate_Type, shape=Isolate_Type, group=Isolate_Type))+
+  geom_errorbar(inner_limits, width = 0, colour="black",position=pd)+
+  geom_line(colour="black",position=pd)+
+  geom_point(size=4,position=pd)+
+  scale_shape_manual(values=c(15,15,17,17,19))+
+  scale_color_manual(values=c("#1f78b4","#a6cee3","#33a02c","#b2df8a","#fdae61"))+
+  ylab("Normalized Mean Grey Value")+
+  xlab("Time (hr)")+
+  geom_hline(yintercept=0, linetype=2, size=0.75, color="red")+
+  geom_hline(yintercept=1, linetype=2, size=0.75, color="gray")+
+  theme_bw()+
+  theme(axis.text=element_text(size=18), axis.title.x=element_text(size=18,face="bold",vjust=-0.4), 
+        axis.title.y=element_text(size=18,vjust=1.2), legend.text=element_text(size=10),
+        legend.title=element_text(size=10,face="bold"), legend.position="right")
+inner_CR_grey_plot
+plot_filename <- paste(dir,"inner_CR_grey_plot_all.png", sep="")
+ggsave(file=plot_filename, plot=inner_CR_grey_plot)
+
+# Without outer isolates - change in area over time
+
+inner_area_mean_SE <- ddply(inner_data, c("Isolate_Type","Time"), summarise, mean=mean(Area), se=sd(Area)/sqrt(length(Area)))
+inner_area_mean_SE <- transform(inner_area_mean_SE, lower=mean-se, upper=mean+se)
+inner_limits <- aes(ymax=inner_area_mean_SE$upper, ymin=inner_area_mean_SE$lower)
+
+pd <- position_dodge(0.1)
+
+inner_CR_growth_plot <- ggplot(inner_area_mean_SE, aes(x=Time, y=mean, colour=Isolate_Type, shape=Isolate_Type, group=Isolate_Type))+
+  geom_errorbar(inner_limits, width = 0, colour="black",position=pd)+
+  geom_line(colour="black",position=pd)+
+  geom_point(size=4,position=pd)+
+  scale_shape_manual(values=c(15,15,17,17,8,19,8))+
+  scale_color_manual(values=c("#1f78b4","#a6cee3","#33a02c","#b2df8a","grey","#fdae61","red"))+
+  ylab("Area (cm^2)")+
+  xlab("Time (hr)")+
+  theme_bw()+
+  theme(axis.text=element_text(size=18), axis.title.x=element_text(size=18,face="bold",vjust=-0.4), 
+        axis.title.y=element_text(size=18,vjust=1.2), legend.text=element_text(size=10),
+        legend.title=element_text(size=10,face="bold"), legend.position="right")
+inner_CR_growth_plot
+plot_filename <- paste(dir,"inner_CR_growth_plot_all.png", sep="")
+ggsave(file=plot_filename, plot=inner_CR_growth_plot)
