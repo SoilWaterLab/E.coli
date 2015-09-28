@@ -1,3 +1,11 @@
+#ALLLL of the spagetti code. My apologies for anyone that has to work
+#with this; I wrote it in a merry rush and so it's pretty messy and not at
+#all efficient. 
+
+#A big chunk of this code can be recycled for reading from multiple compound
+#plate reader output files. 
+
+
 # Clear workspace
 rm(list=ls())
 
@@ -17,7 +25,7 @@ setwd(dir)
 
 #Open files
 curve_list <- data.frame(list.files(path=dir, pattern="*hr"))
-curve_list <- as.data.frame(curve_list[c(5,6,1,2,3,4),])
+curve_list <- as.data.frame(curve_list[c(13,14,4,8,9,10,11,12,1,2,3,5,6,7),])
 colnames(curve_list) <- "File"
 
 i=1
@@ -36,10 +44,13 @@ while (i<((nrow(curve_list))+1)){
 }
 i<-1
 LB1_list <- data.frame(list.files(path=dir, pattern="*_LB1.csv*"))
+LB1_list <- as.data.frame(LB1_list[c(6:14,1:5),])
 colnames(LB1_list) <- "File"
 LB0.1_list <- data.frame(list.files(path=dir, pattern="*_LB0.1.csv*"))
+LB0.1_list <- as.data.frame(LB0.1_list[c(6:14,1:5),])
 colnames(LB0.1_list) <- "File"
 LB0.05_list <- data.frame(list.files(path=dir, pattern="*_LB0.05.csv*"))
+LB0.05_list <- as.data.frame(LB0.05_list[c(6:14,1:5),])
 colnames(LB0.05_list) <- "File"
 
 while (i<((nrow(LB1_list))+1)){
@@ -86,9 +97,11 @@ while (i<((nrow(LB1_list))+1)){
   i<-i+1
 }
 
+times <- c(0,0.5,1,2,3,4,6,8,10,12,14,21,23,27)
+w <- nrow(LB1_list)+1
 #NOTE: At this point, each column is a time point. The rows are isolates. I dunno why.
 j<-1
-while (j<7){
+while (j<w){
   
   a <- mean_se(old_soil_SA[,j])
   if(j==1){
@@ -99,11 +112,13 @@ while (j<7){
   }
   j<-j+1
 }
+b$Time <- times
+b$Treatment <- "Soil SA"
 old_soil_SA_stats <- b
 
 
 j<-1
-while (j<7){
+while (j<w){
   
   a <- mean_se(old_manure_SA[,j])
   if(j==1){
@@ -114,10 +129,12 @@ while (j<7){
   }
   j<-j+1
 }
+b$Time <- times
+b$Treatment <- "Manure SA"
 old_manure_SA_stats <- b
 
 j<-1
-while (j<7){
+while (j<w){
   
   a <- mean_se(old_soil_incorp[,j])
   if(j==1){
@@ -128,11 +145,13 @@ while (j<7){
   }
   j<-j+1
 }
+b$Time <- times
+b$Treatment <- "Soil Incorp"
 old_soil_incorp_stats <- b
 
 
 j<-1
-while (j<7){
+while (j<w){
   
   a <- mean_se(old_manure_incorp[,j])
   if(j==1){
@@ -143,10 +162,12 @@ while (j<7){
   }
   j<-j+1
 }
+b$Time <- times
+b$Treatment <- "Manure Incorp"
 old_manure_incorp_stats <- b
 
 j<-1
-while (j<7){
+while (j<w){
   
   a <- mean_se(old_red[,j])
   if(j==1){
@@ -157,10 +178,12 @@ while (j<7){
   }
   j<-j+1
 }
+b$Time <- times
+b$Treatment <- "Red"
 old_red_stats <- b
 
 j<-1
-while (j<7){
+while (j<w){
   
   a <- mean_se(old_white[,j])
   if(j==1){
@@ -171,12 +194,42 @@ while (j<7){
   }
   j<-j+1
 }
+b$Time <- times
+b$Treatment <- "White"
 old_white_stats <- b
 
-#NOTE TO ALLISON: I ran out of time to finish
-#this, but the only thing left to do is to plot. Use the *_stats
-#dataframes with ggplot and it should work. See you tomorrow!
+j<-1
+while (j<w){
+  
+  a <- mean_se(old_wk0[,j])
+  if(j==1){
+    b<-a
+  }
+  if(j>1){
+    b<- rbind(b,a)
+  }
+  j<-j+1
+}
+b$Time <- times
+b$Treatment <- "Week 0"
+old_wk0_stats <- b
 
+all <- rbind(old_wk0_stats,old_red_stats,old_white_stats,old_manure_incorp_stats,old_manure_SA_stats,old_soil_SA_stats,old_soil_incorp_stats)
+limits <- aes(ymax=all$ymax, ymin=all$ymin)
+CR_growth_plot <- ggplot(all, aes(x=Time, y=y,colour=Treatment, group=Treatment, shape=Treatment))+
+  geom_errorbar(limits, width = 0, colour="black")+
+  geom_line(colour="black")+
+  geom_point(size=4)+
+  scale_shape_manual(values=c(15,15,8,17,17,19,8))+
+  scale_color_manual(values=c("#1f78b4","#a6cee3","Red","#b2df8a","#33a02c","#fdae61","grey"))+
+  ylab("OD")+
+  xlab("Time (hr)")+
+  theme_bw()+
+  theme(axis.text=element_text(size=30), axis.title.x=element_text(size=30,face="bold",vjust=-0.4), 
+        axis.title.y=element_text(size=30,vjust=1.2), legend.text=element_text(size=25),
+        legend.title=element_text(size=25,face="bold"), legend.position=c(0.2,0.5))
 
-
+png(filename=paste(dir,"liquid_curve.png",sep=""), height=1200, width=1600)
+plot(CR_growth_plot)
+dev.off()
 
